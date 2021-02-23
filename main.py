@@ -1,4 +1,4 @@
-from models import *
+from models37 import *
 
 
 @Field.rpy("!name[str] -u", pk=True)
