@@ -15,6 +15,6 @@ class EventManager:
         return pile.on(callback)
 
     def emit(self, event, **config):
-        for pile in self.piles.values():
+        for pile in tuple(self.piles.values()):
             if pile.match(event):
                 pile.emit(event=event, **config)
