@@ -161,15 +161,6 @@ class TestParse(unittest.TestCase):
                 self.assertEqual(result, parse(value))
 
 
-# class TestField(unittest.TestCase):
-#     def test_configs(self):
-#         for config, valid in data:
-#             if valid:
-#                 Field(**config)
-#             else:
-#                 self.assertRaises(FieldConfigError, Field, **config)
-
-
 class TestModel(unittest.TestCase):
     def test_001(self):
         """

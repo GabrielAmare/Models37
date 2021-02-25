@@ -20,6 +20,9 @@ class DataList:
     def __str__(self):
         return str(self.values)
 
+    def __eq__(self, other):
+        return isinstance(other, DataList) and self.values == other.values
+
     def append(self, item):
         if not isinstance(item, self.field.dtype):
             raise FieldAppendError(

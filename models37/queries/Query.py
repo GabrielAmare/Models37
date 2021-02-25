@@ -106,7 +106,7 @@ class Query:
     def keeptype(self, t):
         """Keep only items of a certain type"""
         if isinstance(t, str):
-            return self.keep(lambda item: item.__class__.__name__ == t)
+            return self.keep(lambda item: type(item).__name__ == t)
         else:
             return self.keep(lambda item: isinstance(item, t))
 

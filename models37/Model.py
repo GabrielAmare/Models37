@@ -17,13 +17,29 @@ class Model:
 
         cls.h = ModelHandler(cls)
 
-    def __emit__(self, action: str, field=None, **cfg):
+    def on(self, action: str, name=None, callback=None):
         model = self.__class__
-        event = model.__name__ + '/' + str(self.uid) + '/' + action
+        uid = str(self.uid)
+
+        event = model.__name__ + '/' + uid + '/' + action
+
+        if name:
+            event += '/' + name
+
+        self.h.events.on(event, callback)
+
+    def emit(self, action: str, field=None, **cfg):
+        model = self.__class__
+        try:
+            uid = str(self.uid)
+        except AttributeError:
+            uid = "?"
+
+        event = model.__name__ + '/' + uid + '/' + action
         config = dict(model=model, target=self, **cfg)
 
         if field:
-            event += '/' + field
+            event += '/' + field.name
             config["field"] = field
 
         self.h.events.emit(event, **config)
@@ -40,8 +56,7 @@ class Model:
 
         self.d = data
         self.h.instances.add(self)
-
-        self.__emit__(CREATE, data=data)
+        self.emit(CREATE, data=data)
 
     def __update__(self, **data):
         for field in self.h.fields:
@@ -51,12 +66,14 @@ class Model:
 
         self.d.update(data)
 
-        self.__emit__(UPDATE, data=data)
+        self.emit(UPDATE, data=data)
 
     def __del__(self):
-        self.__emit__(DELETE)
-
-        self.h.instances.remove(self)
+        self.emit(DELETE)
+        try:
+            self.h.instances.remove(self)
+        except ValueError as e:
+            pass
 
     def __repr__(self):
         return f"{self.__class__.__name__}(" + \
@@ -78,7 +95,7 @@ class Model:
             field.check(action=UPDATE, model=self.__class__, target=self, data=data)
             self.d[key] = data[key]
 
-            self.__emit__(UPDATE, field, value=val)
+            self.emit(UPDATE, field, value=val)
 
         return super().__setattr__(key, val)
 

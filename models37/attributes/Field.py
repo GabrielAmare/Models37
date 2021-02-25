@@ -3,6 +3,7 @@ from ..errors import PrimaryKeyError, FieldCheckError, FieldConfigError, FieldFi
 from .DataList import DataList
 from .RPY import RPY
 from .Parse import Parse
+from datetime import date, datetime
 
 
 class Field:
@@ -106,11 +107,21 @@ class Field:
                 value = data[self.name]
             else:
                 return
+
+            if getattr(target, self.name) == value:
+                return
+
+            if self.static:
+                raise field_check_error(
+                    reason='<field> is static, no update allowed',
+                    solve="set <field>.static=False or don't try to change it's value"
+                )
+
         else:
             raise Exception('Invalid action !')
 
         if self.multiple:
-            if not isinstance(value, list):
+            if not isinstance(value, DataList):
                 raise field_check_error(
                     reason='<field> must be a list !'
                 )
@@ -137,7 +148,7 @@ class Field:
                 )
 
         if self.unique:
-            if value in model.h.instances.filter(lambda i: i is target).getattr(self.name):
+            if value in model.h.instances.filter(lambda i: i is target).getattr(self.name).filter(lambda v: not v):
                 raise field_check_error(
                     reason='<field> = ' + repr(value) + ' already exists in the column',
                     solve='use a value which is not already used for <field>'
