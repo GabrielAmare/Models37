@@ -1,9 +1,8 @@
-from ..constants import MODEL_RESERVED_ATTRIBUTES, NATIVE_TYPES_STRING, NATIVE_TYPES, CREATE, UPDATE, ACCESS
+from ..constants import MODEL_RESERVED_ATTRIBUTES, NATIVE_TYPES_MAP, CREATE, UPDATE, ACCESS
 from ..errors import PrimaryKeyError, FieldCheckError, FieldConfigError, FieldFindError
 from .DataList import DataList
 from .RPY import RPY
 from .Parse import Parse
-from datetime import date, datetime
 
 
 class Field:
@@ -52,11 +51,14 @@ class Field:
                 solve='Set static=False or multiple=False when creating the field'
             )
 
-        if default is not None and not hasattr(default, '__call__') and not default.__class__ in NATIVE_TYPES:
-            raise field_config_error(
-                reason='default: ' + default.__class__.__name__ + ' is not allowed',
-                solve='Use a default value which type is in (' + ', '.join(NATIVE_TYPES_STRING) + ')'
-            )
+        if default is not None:
+            if not hasattr(default, '__call__'):
+                default_class_name = default.__class__.__name__
+                if default_class_name not in NATIVE_TYPES_MAP:
+                    raise field_config_error(
+                        reason='default: ' + default_class_name + ' is not allowed',
+                        solve='Use a default value which type is in (' + ', '.join(NATIVE_TYPES_MAP) + ')'
+                    )
 
         self.name = name
         self.type = type_
@@ -78,8 +80,8 @@ class Field:
         return model
 
     def data_type(self, model):
-        if self.type in NATIVE_TYPES_STRING:
-            return eval(self.type)
+        if self.type in NATIVE_TYPES_MAP:
+            return NATIVE_TYPES_MAP[self.type]
         else:
             return model.h.models.get(self.type)
 

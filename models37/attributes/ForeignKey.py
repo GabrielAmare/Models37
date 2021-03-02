@@ -1,4 +1,4 @@
-from ..constants import MODEL_RESERVED_ATTRIBUTES, NATIVE_TYPES_STRING
+from ..constants import MODEL_RESERVED_ATTRIBUTES, NATIVE_TYPES_MAP
 from ..errors import ForeignKeyConfigError
 from ..ModelHandler import ModelHandler
 from .RPY import RPY
@@ -33,7 +33,7 @@ class ForeignKey:
         if not key:
             raise foreign_key_config_error(reason='key must be defined')
 
-        if type_ in NATIVE_TYPES_STRING:
+        if type_ in NATIVE_TYPES_MAP:
             raise foreign_key_config_error(
                 reason='type=' + repr(
                     type_) + ' is not allowed (native type needs can\'t be set as a foreign key type)',
