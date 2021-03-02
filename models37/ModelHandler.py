@@ -11,6 +11,7 @@ class ModelHandler:
     attributes: InheritQuery
     fields: KeyQuery
     foreign_keys: KeyQuery
+    primary_keys: KeyQuery
 
     def __init__(self, model):
         self.model = model
