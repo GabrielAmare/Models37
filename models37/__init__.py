@@ -4,11 +4,9 @@ from .attributes import *
 from .constants import *
 from .errors import *
 
-from .ModelHandler import ModelHandler
-
 Field.rpy(
     rpy="!uid[int] -u -s",
-    default=lambda model, **_: model.h.instances.getattr("uid").max(default=0) + 1,
+    default=lambda model, **_: model.instances.getattr("uid").max(default=0) + 1,
     pk=True
 )(Model)
 
@@ -39,7 +37,7 @@ def database_to_rpy(color=False):
                    field.type + CLR + "]" + u + p + s
 
         return BOLD + BLUE + model.__name__ + CLR + ":\n" + "\n".join(
-            "\t" + field_to_rpy(a) for a in model.h.attributes
+            "\t" + field_to_rpy(a) for a in model.attributes
         )
 
-    return "\n\n".join(model_to_rpy(model) for model in ModelHandler.models) + "\n"
+    return "\n\n".join(model_to_rpy(model) for model in Model.models) + "\n"

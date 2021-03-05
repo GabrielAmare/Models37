@@ -76,14 +76,14 @@ class Field:
         self.pk = pk
 
     def __call__(self, model):
-        model.h.attributes.add(self)
+        model.attributes.add(self)
         return model
 
     def data_type(self, model):
         if self.type in NATIVE_TYPES_MAP:
             return NATIVE_TYPES_MAP[self.type]
         else:
-            return model.h.models.get(self.type)
+            return model.models.get(self.type)
 
     def check(self, action, model, target, data):
         def field_check_error(reason, solve=""):
@@ -150,7 +150,7 @@ class Field:
                 )
 
         if self.unique:
-            if value in model.h.instances.filter(lambda i: i is target).getattr(self.name).filter(lambda v: not v):
+            if value in model.instances.filter(lambda i: i is target).getattr(self.name).filter(lambda v: not v):
                 raise field_check_error(
                     reason='<field> = ' + repr(value) + ' already exists in the column',
                     solve='use a value which is not already used for <field>'
@@ -225,7 +225,7 @@ class Field:
         item = Parse.to(item, data_type)
 
         if isinstance(item, data_type):
-            target = model.h.instances.where(**{self.name: item}).first
+            target = model.instances.where(**{self.name: item}).first
             if target:
                 return target
 

@@ -1,6 +1,10 @@
 from datetime import date, datetime
 
-MODEL_RESERVED_ATTRIBUTES = ["h", "d"] + ["find", "findall"] + ["on", "emit"]
+MODEL_RESERVED_ATTRIBUTES = ["models", "events"] + \
+                            ["instances", "attributes", "fields", "foreign_keys", "primary_keys"] + \
+                            ["d"] + \
+                            ["find", "findall"] + \
+                            ["on", "emit"]
 
 NATIVE_TYPES_MAP = dict(
     bool=bool,

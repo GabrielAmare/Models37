@@ -1,11 +1,19 @@
 from .constants import MODEL_RESERVED_ATTRIBUTES, CREATE, UPDATE, DELETE
 from .errors import ModelOverwriteError, PrimaryKeyError
-from .queries import Query
-from .ModelHandler import ModelHandler
+from .queries import Query, KeyQuery, InheritQuery
+from .events import EventManager
 
 
 class Model:
-    h: ModelHandler
+    models: KeyQuery = KeyQuery("__name__")
+    events: EventManager = EventManager()
+
+    instances: KeyQuery
+    attributes: InheritQuery = InheritQuery("name", Query(safe=True))
+    fields: KeyQuery
+    foreign_keys: KeyQuery
+    primary_keys: KeyQuery
+
     d: dict
 
     def __init_subclass__(cls, **kwargs):
@@ -15,7 +23,26 @@ class Model:
                 reason="You can't overwrite <model> !"
             )
 
-        cls.h = ModelHandler(cls)
+        Model.models.add(cls)
+        cls.instances = KeyQuery("uid")
+
+        attributes = Query(safe=True)
+
+        for mro in reversed(cls.__mro__):
+            if mro is not cls:
+                if issubclass(mro, Model):
+                    for attribute in mro.attributes:
+                        older = attributes.where(name=attribute.name).first
+                        if older:
+                            attributes.replace(older, attribute)
+                        else:
+                            attributes.append(attribute)
+
+        cls.attributes = InheritQuery("name", attributes)
+
+        cls.fields = cls.attributes.keeptype("Field").safe()
+        cls.foreign_keys = cls.attributes.keeptype("ForeignKey").safe()
+        cls.primary_keys = cls.fields.where(pk=True).safe()
 
     def on(self, action: str, name=None, callback=None):
         model = self.__class__
@@ -26,7 +53,7 @@ class Model:
         if name:
             event += '/' + name
 
-        self.h.events.on(event, callback)
+        Model.events.on(event, callback)
 
     def emit(self, action: str, field=None, **cfg):
         model = self.__class__
@@ -42,26 +69,26 @@ class Model:
             event += '/' + field.name
             config["field"] = field
 
-        self.h.events.emit(event, **config)
+        Model.events.emit(event, **config)
 
     def __init__(self, **data):
         """
             If the instance already exists (which we check by the existence of the attribute 'd'),
             it will be updated, else it will be created
         """
-        for field in self.h.fields:
+        for field in self.fields:
             field.parse(action=CREATE, model=self.__class__, target=self, data=data)
-        for field in self.h.fields:
+        for field in self.fields:
             field.check(action=CREATE, model=self.__class__, target=self, data=data)
 
         self.d = data
-        self.h.instances.add(self)
+        self.instances.add(self)
         self.emit(CREATE, data=data)
 
     def __update__(self, **data):
-        for field in self.h.fields:
+        for field in self.fields:
             field.parse(action=UPDATE, model=self.__class__, target=self, data=data)
-        for field in self.h.fields:
+        for field in self.fields:
             field.check(action=UPDATE, model=self.__class__, target=self, data=data)
 
         self.d.update(data)
@@ -71,7 +98,7 @@ class Model:
     def __del__(self):
         self.emit(DELETE)
         try:
-            self.h.instances.remove(self)
+            self.instances.remove(self)
         except ValueError as e:
             pass
 
@@ -80,7 +107,7 @@ class Model:
                ", ".join(
                    f"{key}={repr(val)}"
                    for key, val in self.d.items()
-                   if self.h.fields.get(key).show
+                   if self.fields.get(key).show
                ) + \
                ")"
 
@@ -88,7 +115,7 @@ class Model:
         if key.startswith("__") and key.endswith("__") or key in MODEL_RESERVED_ATTRIBUTES:
             return super().__setattr__(key, val)
 
-        field = self.h.fields.get(key)
+        field = self.fields.get(key)
         if field:
             data = {key: val}
             field.parse(action=UPDATE, model=self.__class__, target=self, data=data)
@@ -103,7 +130,7 @@ class Model:
         if key.startswith("__") and key.endswith("__") or key in MODEL_RESERVED_ATTRIBUTES:
             return super().__getattribute__(key)
 
-        attribute = self.h.attributes.get(key)
+        attribute = self.attributes.get(key)
         if attribute:
             return attribute.getter(self)
 
@@ -114,7 +141,7 @@ class Model:
         if isinstance(item, cls):
             return item
 
-        for primary_key in cls.h.primary_keys:
+        for primary_key in cls.primary_keys:
             try:
                 return primary_key.find(cls, item)
             except PrimaryKeyError:
@@ -129,8 +156,4 @@ class Model:
 
     @classmethod
     def findall(cls, **cfg) -> Query:
-        return cls.h.instances.where(**cfg)
-
-
-ModelHandler.Model = Model
-Model.h = ModelHandler(Model)
+        return cls.instances.where(**cfg)

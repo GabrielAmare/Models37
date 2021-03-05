@@ -170,9 +170,9 @@ class TestModel(unittest.TestCase):
         class A(Model):
             pass
 
-        self.assertIs(ModelHandler.models.get("A"), A)
+        self.assertIs(Model.models.get("A"), A)
 
-        ModelHandler.models.remove(A)
+        Model.models.remove(A)
 
     def test_002(self):
         """
@@ -187,11 +187,11 @@ class TestModel(unittest.TestCase):
         class B(Model):
             pass
 
-        self.assertIs(ModelHandler.models.get("B"), B)
-        self.assertIsNot(ModelHandler.models.get("B"), old_B)
-        self.assertNotIn(old_B, ModelHandler.models)
+        self.assertIs(Model.models.get("B"), B)
+        self.assertIsNot(Model.models.get("B"), old_B)
+        self.assertNotIn(old_B, Model.models)
 
-        ModelHandler.models.remove(B)
+        Model.models.remove(B)
 
     def test_003(self):
         """

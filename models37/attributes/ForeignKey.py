@@ -1,6 +1,5 @@
 from ..constants import MODEL_RESERVED_ATTRIBUTES, NATIVE_TYPES_MAP
 from ..errors import ForeignKeyConfigError
-from ..ModelHandler import ModelHandler
 from .RPY import RPY
 
 
@@ -48,13 +47,13 @@ class ForeignKey:
         self.key = key
 
     def __call__(self, model):
-        model.h.attributes.add(self)
+        model.attributes.add(self)
         return model
 
     def getter(self, target):
-        model = ModelHandler.models.get(self.type)
+        model = Model.models.get(self.type)
 
-        q = model.h.instances.where(**{self.key: target})
+        q = model.instances.where(**{self.key: target})
 
         if self.multiple:
             return q
