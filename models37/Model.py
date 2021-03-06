@@ -5,6 +5,23 @@ from .events import EventManager
 
 
 class Model:
+    """
+        The following attributes are set at different levels of use,
+            - some are associated with the Model class only [A]
+            - some are associated with the Model subclasses [M]
+            - some are associated with the Model subclasses instances [I]
+
+        [A] models : Contains the list of all the runtime registered Model subclasses
+        [A] events : Register for the events -> callback
+
+        [M] instances : List of all the runtime created/loaded instances
+        [M] attributes : List of all the attributes associated with a given model
+        [M] fields : Subset of the 'attributes' with only the instances of Field
+        [M] foreign_keys : Subset of the 'attributes' with only the instances of ForeignKey
+
+        [I] d : dict of the data about the instance
+
+    """
     models: KeyQuery = KeyQuery("__name__")
     events: EventManager = EventManager()
 
