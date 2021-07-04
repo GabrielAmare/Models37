@@ -4,6 +4,14 @@ from .queries import Query, KeyQuery, InheritQuery
 from .events import EventManager
 
 
+def _is_dunder(key: str):
+    return key.startswith('__') and key.endswith('__')
+
+
+def _is_reserved(key: str):
+    return key in MODEL_RESERVED_ATTRIBUTES
+
+
 class Model:
     """
         The following attributes are set at different levels of use,
@@ -129,7 +137,7 @@ class Model:
                ")"
 
     def __setattr__(self, key, val):
-        if key.startswith("__") and key.endswith("__") or key in MODEL_RESERVED_ATTRIBUTES:
+        if _is_dunder(key) or _is_reserved(key):
             return super().__setattr__(key, val)
 
         field = self.fields.get(key)
@@ -144,7 +152,7 @@ class Model:
         return super().__setattr__(key, val)
 
     def __getattr__(self, key):
-        if key.startswith("__") and key.endswith("__") or key in MODEL_RESERVED_ATTRIBUTES:
+        if _is_dunder(key) or _is_reserved(key):
             return super().__getattribute__(key)
 
         attribute = self.attributes.get(key)
